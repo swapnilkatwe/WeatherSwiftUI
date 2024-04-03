@@ -19,7 +19,13 @@ final class ImageLoader: ObservableObject {
             isLoading = false
             return
         }
+        guard #available(iOS 15.0, *) else {
+            getData(url: url)
+            return
+        }
+    }
 
+    func getData(url: URL) {
         URLSession.shared.dataTask(with: url) { (data, res, err) in
             if let unwrappedData = data {
                 DispatchQueue.main.async {
@@ -27,7 +33,6 @@ final class ImageLoader: ObservableObject {
                     self.isLoading = false
                 }
             }
-
         }.resume()
     }
 }
