@@ -16,6 +16,7 @@ struct SearchCityView: View {
             TextField("Enter city here", text: $searchedCity)
                 .padding(.leading, 50)
                 .font(.system(size: Constants.Font.mediumSize))
+                .accessibilityIdentifier("cityTextField")
             Button {
                 weatherViewModel.city = searchedCity
             } label: {
@@ -29,6 +30,7 @@ struct SearchCityView: View {
                         .frame(width: 20, height: 20)
                 }
             }
+            .accessibilityIdentifier("searchButton")
         }
         .foregroundColor(.white)
         .padding()

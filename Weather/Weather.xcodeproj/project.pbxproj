@@ -30,6 +30,8 @@
 		55D607972BBEAA49003D8D8B /* DataParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D607962BBEAA49003D8D8B /* DataParsing.swift */; };
 		55D607992BBEAD82003D8D8B /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D607982BBEAD82003D8D8B /* NetworkManager.swift */; };
 		55D6079B2BBED6E9003D8D8B /* UtilityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D6079A2BBED6E9003D8D8B /* UtilityExtensions.swift */; };
+		55D6079E2BBF14AE003D8D8B /* MockWeatherResponse.json in Resources */ = {isa = PBXBuildFile; fileRef = 55D6079C2BBF14AE003D8D8B /* MockWeatherResponse.json */; };
+		55D607A02BBF14F4003D8D8B /* MockNetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55D6079F2BBF14F4003D8D8B /* MockNetworkManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +81,8 @@
 		55D607962BBEAA49003D8D8B /* DataParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataParsing.swift; sourceTree = "<group>"; };
 		55D607982BBEAD82003D8D8B /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		55D6079A2BBED6E9003D8D8B /* UtilityExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilityExtensions.swift; sourceTree = "<group>"; };
+		55D6079D2BBF14AE003D8D8B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = en; path = en.lproj/MockWeatherResponse.json; sourceTree = "<group>"; };
+		55D6079F2BBF14F4003D8D8B /* MockNetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNetworkManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +158,8 @@
 			isa = PBXGroup;
 			children = (
 				5329ED4C2B12394500DA8233 /* WeatherTests.swift */,
+				55D6079F2BBF14F4003D8D8B /* MockNetworkManager.swift */,
+				55D6079C2BBF14AE003D8D8B /* MockWeatherResponse.json */,
 				5329ED4E2B12394500DA8233 /* Info.plist */,
 			);
 			path = WeatherTests;
@@ -341,6 +347,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				55D6079E2BBF14AE003D8D8B /* MockWeatherResponse.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,6 +391,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				55D607A02BBF14F4003D8D8B /* MockNetworkManager.swift in Sources */,
 				5329ED4D2B12394500DA8233 /* WeatherTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -410,6 +418,17 @@
 			targetProxy = 5329ED542B12394500DA8233 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		55D6079C2BBF14AE003D8D8B /* MockWeatherResponse.json */ = {
+			isa = PBXVariantGroup;
+			children = (
+				55D6079D2BBF14AE003D8D8B /* en */,
+			);
+			name = MockWeatherResponse.json;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		5329ED5A2B12394500DA8233 /* Debug */ = {

@@ -64,7 +64,7 @@ class WeatherViewModel: NSObject, ObservableObject, DataParsing {
         getWeatherForCity(city: city, for: url, queryParam: queryParam)
     }
     
-    private func getWeatherForCity(city: String, for url: URL?, queryParam: [URLQueryItem]?) {
+    func getWeatherForCity(city: String, for url: URL?, queryParam: [URLQueryItem]?) {
         guard let url = url else {return}
         
 
