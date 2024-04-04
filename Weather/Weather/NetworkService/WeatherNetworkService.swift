@@ -7,54 +7,59 @@
 
 import Foundation
 
-struct WeatherApi {
-    static let key = Constants.Strings.keyAPI
-}
-
-extension WeatherApi {
-    static let baseURL = Constants.Strings.url
-
-    static func getCurrentWeatherURL(latitude: Double, longitude: Double) -> String {
-        let excludeFields = "minutely"
-        return "\(baseURL)/onecall?lat=\(latitude)&lon=\(longitude)&appid=\(key)&exclude=\(excludeFields)&units=metric"
-    }
-}
-
-final class NetworkManager<T: Codable> {
-    static func fetchWeather(for url: URL, completion: @escaping (Result<T, NetworkError>) -> Void) {
-        URLSession.shared.dataTask(with: url) { (data, response, error) in
-            guard let data = data else {
-                completion(.failure(.invalidData))
-                return
-            }
-            
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                completion(.failure(.invalidResponse))
-                return
-            }
-            
-            guard error == nil else {
-                debugPrint(String(describing: error))
-                if let error = error?.localizedDescription {
-                    completion(.failure(.error(err: error)))
-                }
-                return
-            }
-            
-            do {
-                let json = try JSONDecoder().decode(T.self, from: data)
-                completion(.success(json))
-            } catch let err {
-                debugPrint(String(describing: err))
-                completion(.failure(.decodingError(err: err.localizedDescription)))
-            }
-        }.resume()
-    }
-}
-
 enum NetworkError: Error {
+    case apiError(String)
     case invalidResponse
-    case invalidData
-    case decodingError(err: String)
-    case error(err: String)
+    case httpError(Int)
+    case noData
+    case invalidURL
+}
+
+protocol NetworkService {
+    func fetchWeather(for url: URL, queryParam: [URLQueryItem]? , completion: @escaping (Result<Data, NetworkError>) -> Void)
+}
+
+extension NetworkService {
+
+    func buildRequest(url: URL,
+                      method: String = "GET",
+                      queryParam: [URLQueryItem]? = nil ) -> URLRequest {
+        
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: true)
+        components?.queryItems = queryParam
+        var request = URLRequest(url: components?.url ?? url)
+        request.httpMethod = method
+        return request
+    }
+    
+    func handleResponse(data: Data?,
+                       response: URLResponse?,
+                       error: Error?,
+                        completionHandler: @escaping(Result<Data, NetworkError>) -> Void) {
+        
+        guard error == nil else {
+            debugPrint(error as Any)
+            if let error = error?.localizedDescription {
+                completionHandler(.failure(NetworkError.apiError(error)))
+            }
+            return
+        }
+        
+        guard let response = response as? HTTPURLResponse else {
+            completionHandler(.failure(NetworkError.invalidResponse))
+            return
+        }
+        
+        guard (200...299).contains(response.statusCode) else {
+            completionHandler(.failure(NetworkError.httpError(response.statusCode)))
+            return
+        }
+        
+        guard let data = data else {
+            completionHandler(.failure(NetworkError.noData))
+            return
+        }
+        
+        completionHandler(.success(data))
+    }
 }

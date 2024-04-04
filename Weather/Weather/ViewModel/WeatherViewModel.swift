@@ -8,8 +8,10 @@
 import SwiftUI
 import CoreLocation
 
-class WeatherViewModel: NSObject,ObservableObject {
-    private let locationManager = CLLocationManager()
+class WeatherViewModel: NSObject, ObservableObject, DataParsing {
+    private let locationManager: CLLocationManager
+    private let networkManager: NetworkService
+
     @Published var weather = WeatherResponse.empty()
     @Published var city = Constants.Strings.city {
         didSet {
@@ -17,10 +19,12 @@ class WeatherViewModel: NSObject,ObservableObject {
             saveLastSearchedLocation()
         }
     }
-    
-    override init() {
+
+    init(networkManager: NetworkService = NetworkManager(), locationManager: CLLocationManager = CLLocationManager()) {
+        self.networkManager = networkManager
+        self.locationManager = locationManager
         super.init()
-        initialiseLocation()
+        self.initialiseLocation()
     }
     
     private func getLocation() {
@@ -38,26 +42,48 @@ class WeatherViewModel: NSObject,ObservableObject {
     }
     
     private func getWeatherForLocation(coord: CLLocationCoordinate2D?) {
-        var urlString = ""
+        var queryParam: [URLQueryItem] = []
+        var location = CLLocationCoordinate2D()
         if let coord = coord {
-            urlString = WeatherApi.getCurrentWeatherURL(latitude: coord.latitude, longitude: coord.longitude)
+            location = coord
         }
         else {
-            urlString = WeatherApi.getCurrentWeatherURL(latitude: 59.929305, longitude: 10.716746) // Oslo
+            location = CLLocationCoordinate2D(latitude: 59.929305, longitude: 10.716746)// Oslo
         }
-        getWeatherForCity(city: city, for: urlString)
+        queryParam = [
+            URLQueryItem(name: "lat", value: "\(location.latitude)"),
+            URLQueryItem(name: "lon", value: "\(location.longitude)"),
+            URLQueryItem(name: "appid", value: "\(AppConfig.shared.key)"),
+            URLQueryItem(name: "exclude", value: "minutely"),
+            URLQueryItem(name: "units", value: "metric"),
+        ]
+        
+        guard let url = URL(string: AppConfig.shared.baseURL + "/onecall") else {
+            return
+        }
+        getWeatherForCity(city: city, for: url, queryParam: queryParam)
     }
     
-    private func getWeatherForCity(city: String, for urlString: String) {
-        guard let url = URL(string: urlString) else {return}
-        NetworkManager<WeatherResponse>.fetchWeather(for: url) { (result) in
+    private func getWeatherForCity(city: String, for url: URL?, queryParam: [URLQueryItem]?) {
+        guard let url = url else {return}
+        
+
+        networkManager.fetchWeather(for: url, queryParam: queryParam) { [weak self] result in
+            guard let _self = self else { return }
             switch result {
-            case .success(let response):
-                DispatchQueue.main.async {
-                    self.weather = response
+            case .success(let data):
+                let parseResultData = _self.parseDataForWeatherResponse(data: data)
+                
+                switch parseResultData {
+                case .success(let weatherResponse):
+                    DispatchQueue.main.async {
+                        _self.weather = weatherResponse
+                    }
+                case .failure(let error):
+                    debugPrint(NetworkError.apiError(error.localizedDescription))
                 }
             case .failure(let error):
-                debugPrint(error)
+                debugPrint(NetworkError.apiError(error.localizedDescription))
             }
         }
     }
@@ -109,7 +135,7 @@ class WeatherViewModel: NSObject,ObservableObject {
 
 // MARK: - Location Manager Delegate
 
-extension WeatherViewModel: CLLocationManagerDelegate{
+extension WeatherViewModel: CLLocationManagerDelegate {
     
     func initialiseLocation() {
         let savedCity = retrieveLastSavedLocation()
