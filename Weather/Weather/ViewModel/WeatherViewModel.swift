@@ -9,6 +9,7 @@ import SwiftUI
 import CoreLocation
 
 class WeatherViewModel: NSObject, ObservableObject, DataParsing {
+    // MARK: - variables
     private let locationManager: CLLocationManager
     private let networkManager: NetworkService
 
@@ -20,6 +21,7 @@ class WeatherViewModel: NSObject, ObservableObject, DataParsing {
         }
     }
 
+    // MARK: - Initial Setup
     init(networkManager: NetworkService = NetworkManager(), locationManager: CLLocationManager = CLLocationManager()) {
         self.networkManager = networkManager
         self.locationManager = locationManager
@@ -37,10 +39,10 @@ class WeatherViewModel: NSObject, ObservableObject, DataParsing {
     }
     
     private func saveLastSearchedLocation() {
-        
         UserDefaults.standard.set(self.city, forKey: "city")
     }
     
+    // MARK: - API
     private func getWeatherForLocation(coord: CLLocationCoordinate2D?) {
         var queryParam: [URLQueryItem] = []
         var location = CLLocationCoordinate2D()
@@ -67,27 +69,44 @@ class WeatherViewModel: NSObject, ObservableObject, DataParsing {
     func getWeatherForCity(city: String, for url: URL?, queryParam: [URLQueryItem]?) {
         guard let url = url else {return}
         
+        // Temp variable just to check closure or async function path
+        let useClosure = false
 
-        networkManager.fetchWeather(for: url, queryParam: queryParam) { [weak self] result in
-            guard let _self = self else { return }
-            switch result {
-            case .success(let data):
-                let parseResultData = _self.parseDataForWeatherResponse(data: data)
-                
-                switch parseResultData {
-                case .success(let weatherResponse):
-                    DispatchQueue.main.async {
-                        _self.weather = weatherResponse
+        if useClosure { // For @escaping Closure based
+            networkManager.fetchWeather(for: url, queryParam: queryParam) { [weak self] result in
+                guard let _self = self else { return }
+                switch result {
+                case .success(let data):
+                    let parseResultData = _self.parseDataForWeatherResponse(data: data)
+                    
+                    switch parseResultData {
+                    case .success(let weatherResponse):
+                        DispatchQueue.main.async {
+                            _self.weather = weatherResponse
+                        }
+                    case .failure(let error):
+                        debugPrint(NetworkError.apiError(error.localizedDescription))
                     }
                 case .failure(let error):
                     debugPrint(NetworkError.apiError(error.localizedDescription))
                 }
-            case .failure(let error):
-                debugPrint(NetworkError.apiError(error.localizedDescription))
+            }
+        } else { // For async await based
+            Task {
+                do {
+                    let data =  try await networkManager.fetchWeatherAsync(for: url, queryParam: queryParam)
+                    let weatherResponse = try parseDataForWeatherResponseAsync(data: data)
+                    await MainActor.run {
+                        weather = weatherResponse
+                    }
+                } catch {
+                    debugPrint("Async block error: \(error.localizedDescription)")
+                }
             }
         }
     }
     
+    // MARK: - Response data binding
     var date: String {
         return Time.defaultDateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(weather.current.date)) )
     }

@@ -17,6 +17,7 @@ enum NetworkError: Error {
 
 protocol NetworkService {
     func fetchWeather(for url: URL, queryParam: [URLQueryItem]? , completion: @escaping (Result<Data, NetworkError>) -> Void)
+    func fetchWeatherAsync(for url: URL, queryParam: [URLQueryItem]?) async throws -> Data
 }
 
 extension NetworkService {
@@ -32,6 +33,7 @@ extension NetworkService {
         return request
     }
     
+    // For @escaping Closure based
     func handleResponse(data: Data?,
                        response: URLResponse?,
                        error: Error?,
@@ -61,5 +63,23 @@ extension NetworkService {
         }
         
         completionHandler(.success(data))
+    }
+    
+    // For async await based
+    func handleResponseAsync(data: Data?, response: URLResponse?) async throws -> Data  {
+        
+        guard let response = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+        
+        guard (200...299).contains(response.statusCode) else {
+            throw NetworkError.httpError(response.statusCode)
+        }
+        
+        guard let data = data else {
+            throw NetworkError.noData
+        }
+
+        return data
     }
 }

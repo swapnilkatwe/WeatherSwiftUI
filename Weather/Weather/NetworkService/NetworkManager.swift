@@ -39,6 +39,7 @@ class NetworkManager: NetworkService {
         self.appConfig = appConfig
     }
 
+    // For @escaping Closure based
     func fetchWeather(for url: URL, queryParam: [URLQueryItem]? = nil, completion: @escaping (Result<Data, NetworkError>) -> Void) {
         let request = buildRequest(url: url, method: "GET", queryParam: queryParam)
         URLSession.shared.dataTask(with: request) { [weak self] (data, response, error) in
@@ -47,5 +48,17 @@ class NetworkManager: NetworkService {
                                  error: error,
                                  completionHandler: completion)
         }.resume()
+    }
+    
+    // For async await based
+    func fetchWeatherAsync(for url: URL, queryParam: [URLQueryItem]? = nil) async throws -> Data {
+        let request = buildRequest(url: url, method: "GET", queryParam: queryParam)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let filteredData = try await handleResponseAsync(data: data, response: response)
+            return filteredData
+        } catch {
+            throw NetworkError.apiError(error.localizedDescription)
+        }
     }
 }
